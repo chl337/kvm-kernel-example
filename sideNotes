@@ -1,0 +1,16 @@
+1-> Hypervisor: add 'mkdir' hv_syscall 
+	- add sys_call_name_marko in hypercall_table.h
+	- register sys_call_handler in hypercall.c
+		- implement.
+		- test
+		 -repeat
+		 	- Res:
+				- syscall:
+					- caled
+					- creates new dir: OK, rights have to be fixed
+					- argv readed
+Kernel: add 'mkdir' sys/hv-call
+	- syscall_entry: default pro/epi-log
+	- syscall_handler: define syscall number
+		- MAX_SYS_NR: updated
+	    - add mkdir-Entry

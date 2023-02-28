@@ -11,6 +11,10 @@
 #include "definition.h"
 #include "hypercall.h"
 
+#ifdef TEST_HV_SYSCALL
+	#include "../test/hv_test/test.h"
+#endif
+
 #define PS_LIMIT (0x200000)
 #define KERNEL_STACK_SIZE (0x4000)
 /*
@@ -190,6 +194,14 @@ void execute(VM* vm) {
     case KVM_EXIT_IO:
       if(!check_iopl(vm)) error("KVM_EXIT_SHUTDOWN\n");
       if(vm->run->io.port & HP_NR_MARK) {
+#ifdef TEST_HV_SYSCALL
+  //RUN Tests
+  printf("HV_TEST: entering tests.\n");
+  hv_syscall_test(NR_HP_mkdir, vm);
+	#ifndef TEST_HV_SYSCALL
+  	error("HV_TEST: end HV_SYSCALL test.");
+	#endif
+#endif
         if(hp_handler(vm->run->io.port, vm) < 0) error("Hypercall failed\n");
       }
       else error("Unhandled I/O port: 0x%x\n", vm->run->io.port);
@@ -245,7 +257,12 @@ int main(int argc, char *argv[]) {
     error("Kernel size exceeded, %p > MAX_KERNEL_SIZE(%p).\n",
       (void*) len,
       (void*) MAX_KERNEL_SIZE);
+
+
   VM* vm = kvm_init(code, len);
   copy_argv(vm, argc - 2, &argv[2]);
+
+
+
   execute(vm);
 }

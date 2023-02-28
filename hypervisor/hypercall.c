@@ -8,6 +8,12 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <string.h>
+
+
 #include "hypercall.h"
 
 static int hp_handle_open(VM*);
@@ -16,6 +22,7 @@ static int hp_handle_write(VM*);
 static int hp_handle_close(VM*);
 static int hp_handle_lseek(VM*);
 static int hp_handle_exit(VM*);
+static int hp_handle_mkdir(VM*);
 static int hp_handle_panic(VM*);
 
 int hp_handler(uint16_t nr, VM* vm) {
@@ -28,6 +35,7 @@ int hp_handler(uint16_t nr, VM* vm) {
   handle(close);
   handle(lseek);
   handle(exit);
+  handle(mkdir);
   handle(panic);
 
 #undef handle
@@ -181,4 +189,33 @@ static int hp_handle_panic(VM *vm) {
   fprintf(stderr, "[\e[31mPANIC\e[0m] %s\n", MEM_AT(offset));
   exit(1);
   return -1;
+}
+
+static int hp_handle_mkdir(VM *vm) {
+#ifdef TEST_HV_SYSCALL
+	printf("SysCall:mkdir called.\n");
+#endif
+  static int ret = UNUSED_VAR;
+#ifndef TEST_HV_SYSCALL
+  PROCESS {
+#endif
+	uint32_t offset = FETCH_U32;
+	const char *dir_path = (char*) MEM_AT(offset);
+	uint32_t end = offset + strlen(dir_path);
+	CHECK_OOB(end);
+#ifdef TEST_HV_SYSCALL
+	printf("HV_TEST: path is %s.\n", dir_path);
+#endif
+
+	const char *tdir_path = "./tdir";
+    int res = mkdir(tdir_path, S_IFDIR|S_IRUSR|S_IWUSR|S_IROTH|S_IWOTH);
+	if (res)
+			error("TEST_HV: failed to create dir with:%s.\n", strerror(errno));
+
+
+#ifndef TEST_HV_SYSCALL
+  } THEN_RETURN(ret);
+#endif
+
+ return 0;
 }

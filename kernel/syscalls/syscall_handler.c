@@ -10,6 +10,7 @@ static const void* syscall_table[MAX_SYS_NR + 1] = {
   ENTRY(open),
   ENTRY(close),
   ENTRY(exit),
+  ENTRY(mkdir),
 
 #undef ENTRY
 };

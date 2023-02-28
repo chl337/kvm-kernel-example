@@ -8,6 +8,9 @@ $(DIRS): FORCE
 debug:
 	echo $(DIRS) | xargs -n 1 $(MAKE) KVM_DEBUG=1 -C
 
+test_hv:
+	echo $(DIRS) | xargs -n 1 $(MAKE) TEST_HV=1 -C
+
 test: all
 	hypervisor/hypervisor.elf kernel/kernel.bin user/orw.elf /etc/os-release
 
